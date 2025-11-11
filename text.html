@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tinhTienDien</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 350px;
+      }
+      h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #555;
+      }
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box; /* Tính cả padding vào width */
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #ketQua {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #e9ecef;
+      }
+      #ketQua p {
+        margin: 5px 0;
+        color: #333;
+      }
+      .highlight {
+        font-weight: bold;
+        color: #d9534f; /* Màu đỏ cho tiền phạt/tổng tiền */
+        font-size: 1.1em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>⚡ Tính Tiền Điện Hàng Tháng</h2>
+      <form id="tienDienForm">
+        <label for="tenChuHo">Tên Chủ Hộ:</label>
+        <input
+          type="text"
+          id="tenChuHo"
+          placeholder="Nhập tên chủ hộ"
+          required
+        />
+
+        <label for="soDien">Số Điện (kWh):</label>
+        <input
+          type="number"
+          id="soDien"
+          placeholder="Nhập số điện tiêu thụ"
+          min="0"
+          required
+        />
+
+        <button type="submit">Tính Tiền</button>
+      </form>
+
+      <div id="ketQua">
+        <p><strong>Tên Chủ Hộ:</strong> <span id="outputTen">...</span></p>
+        <p>
+          <strong>Số Điện Tiêu Thụ:</strong>
+          <span id="outputSoDien">...</span> kWh
+        </p>
+        <p>
+          <strong>Tiền Phạt:</strong>
+          <span id="outputTienPhat" class="highlight">0 VNĐ</span>
+        </p>
+        <p>
+          <strong>Tổng Tiền Phải Trả:</strong>
+          <span id="outputTongTien" class="highlight">0 VNĐ</span>
+        </p>
+      </div>
+    </div>
+    <script>
+      const GIA_DIEN_PER_KWH = 2500; // Ví dụ: 2,500 VNĐ/kWh
+      const PHAT_TREN_100 = 500000; // 500k VNĐ
+      const PHAT_TREN_50 = 200000; // 200k VNĐ
+
+      // Lấy form và các phần tử hiển thị kết quả
+      const form = document.getElementById("tienDienForm");
+      const outputTen = document.getElementById("outputTen");
+      const outputSoDien = document.getElementById("outputSoDien");
+      const outputTienPhat = document.getElementById("outputTienPhat");
+      const outputTongTien = document.getElementById("outputTongTien");
+
+      // Hàm định dạng số sang tiền tệ (Ví dụ: 1234567 -> 1,234,567 VNĐ)
+      function formatCurrency(amount) {
+        return amount.toLocaleString("vi-VN") + " VNĐ";
+      }
+
+      // Hàm tính toán logic chính
+      function tinhTienDien(soDien) {
+        let tienPhat = 0;
+
+        // 1. Áp dụng luật phạt (Ưu tiên: 100 > 50)
+        if (soDien > 100) {
+          tienPhat = PHAT_TREN_100; // 500k
+        } else if (soDien > 50) {
+          tienPhat = PHAT_TREN_50; // 200k
+        }
+
+        // 2. Tính tiền điện cơ bản
+        const tienDienCoBan = soDien * GIA_DIEN_PER_KWH;
+
+        // 3. Tổng tiền
+        const tongTien = tienDienCoBan + tienPhat;
+
+        return {
+          tienPhat: tienPhat,
+          tongTien: tongTien,
+        };
+      }
+
+      // Xử lý sự kiện khi nhấn nút "Tính Tiền"
+      form.addEventListener("submit", function (event) {
+        event.preventDefault(); // Ngăn form gửi đi và tải lại trang
+
+        const tenChuHo = document.getElementById("tenChuHo").value;
+        const soDien = parseFloat(document.getElementById("soDien").value);
+
+        if (isNaN(soDien) || soDien < 0) {
+          alert("Vui lòng nhập Số Điện tiêu thụ hợp lệ.");
+          return;
+        }
+
+        // Thực hiện tính toán
+        const ketQua = tinhTienDien(soDien);
+
+        // Hiển thị kết quả ra Form
+        outputTen.textContent = tenChuHo;
+        outputSoDien.textContent = soDien;
+        outputTienPhat.textContent = formatCurrency(ketQua.tienPhat);
+        outputTongTien.textContent = formatCurrency(ketQua.tongTien);
+      });
+
+      // Khởi tạo trạng thái ban đầu
+      outputTen.textContent = "Chưa tính";
+      outputSoDien.textContent = "0";
+    </script>
+  </body>
+</html>
